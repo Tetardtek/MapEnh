@@ -1,0 +1,16 @@
+# ── Les tuiles ne sont JAMAIS versionnees ─────────────────────────────────────
+#
+# Ce sont des assets Blizzard extraits du CASC local. Les committer, c'est les
+# redistribuer — sur une forge privee comme sur GitHub, et d'autant plus qu'ils
+# viennent d'une bêta fermee.
+#
+# Le depot porte le CODE et la CARTE des tuiles (identifiants, dimensions,
+# ordre). Chaque utilisateur genere les siennes depuis SA propre installation,
+# qu'il possede deja. Rien de Blizzard ne transite par le depot.
+tuiles/
+*.blp
+*.tga
+
+# Sorties de l'extracteur
+*.log
+lot-*.txt
