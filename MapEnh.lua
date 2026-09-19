@@ -21,8 +21,14 @@ local nom, ns = ...
 local poser_les_overlays = true
 
 -- Silencieux par defaut. Le chat appartient au joueur : un addon qui repare une
--- carte n'a rien a y raconter quand il fonctionne. `/mapenh` rallume les messages
--- le temps d'un diagnostic.
+-- carte n'a rien a y raconter quand il fonctionne.
+--
+-- `/mapenh` rallume les messages, ET LE CHOIX EST RETENU (voir `## SavedVariables`
+-- dans le .toc). C'est ce qui remplace l'idee de deux versions du code, une
+-- « dev » bavarde et une « publiee » muette : deux codes, c'est deux codes a
+-- maintenir, et la version qu'on teste n'est plus celle qu'on publie. Ici il n'y
+-- a qu'un seul code, et un interrupteur — utile au developpeur comme a
+-- l'utilisateur qui veut envoyer un rapport.
 local bavard = false
 -- Un echec qui empeche l'addon de fonctionner se dit TOUJOURS, meme en mode
 -- silencieux : un addon qui ne repare rien sans le signaler laisse croire que le
@@ -292,6 +298,8 @@ end
 SLASH_MAPENH1 = "/mapenh"
 SlashCmdList["MAPENH"] = function()
     bavard = not bavard
+    MapEnhReglages = MapEnhReglages or {}
+    MapEnhReglages.bavard = bavard
     print(("|cff44ff44MapEnh|r messages %s."):format(bavard and "activés" or "coupés"))
     if bavard then
         local n = 0
@@ -305,6 +313,11 @@ local pret = CreateFrame("Frame")
 pret:RegisterEvent("PLAYER_LOGIN")
 pret:SetScript("OnEvent", function(self)
     self:UnregisterAllEvents()
+
+    -- Le choix de l'utilisateur survit a la session.
+    if type(MapEnhReglages) == "table" and MapEnhReglages.bavard ~= nil then
+        bavard = MapEnhReglages.bavard
+    end
     if GetLocale() == "enUS" then
         -- Rien a faire sur un client anglais : ses tuiles fonctionnent.
         return
