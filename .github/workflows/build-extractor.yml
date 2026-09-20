@@ -28,6 +28,13 @@ jobs:
             nom: mapenh-extract-linux-x86_64
           - os: windows-latest
             nom: mapenh-extract-windows-x86_64.exe
+          # Deux Mac : les machines Apple Silicon et les Intel encore en service.
+          # Un binaire arm64 ne demarre pas sur un Mac Intel, et l'inverse passe
+          # par Rosetta — autant livrer les deux.
+          - os: macos-latest
+            nom: mapenh-extract-macos-arm64
+          - os: macos-13
+            nom: mapenh-extract-macos-x86_64
     runs-on: ${{ matrix.os }}
     # Sans ca, `gh release upload` rend HTTP 403 : le jeton par defaut est en
     # lecture seule sur les contenus depuis 2023.
@@ -72,6 +79,8 @@ jobs:
           # (/d/a/MapEnh/...) que MSVC ne comprend pas : il les tronquait en un
           # nom de fichier invente, different a chaque passage — 'CascLibRAS.lib',
           # puis 'CascLibRAD.lib'. Ce n'etait pas un nom, c'etait un chemin abime.
+          # macOS lie la bibliotheque standard C++ autrement que gcc, et n'a pas
+          # de zlib a lier explicitement : CMake s'en charge, on ne force rien ici.
           if [ "${{ runner.os }}" = "Windows" ]; then
             lib=$(cygpath -w "$PWD/$lib")
             inc=$(cygpath -w "$PWD/CascLib/src")

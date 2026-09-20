@@ -36,6 +36,11 @@ target_link_libraries(mapenh-extract PRIVATE ${CASC_LIB})
 
 # CascLib est du C++ : sans la bibliotheque standard C++, l'edition de liens
 # echoue sur des symboles absents. MSVC la lie tout seul, pas gcc.
-if(NOT MSVC)
+# Sous Linux il faut nommer explicitement la bibliotheque standard C++ et zlib ;
+# MSVC les lie seul. macOS utilise libc++ et non libstdc++ : le nom `stdc++`
+# n'y existe pas, et l'edition de liens echouerait sur ce seul mot.
+if(APPLE)
+    target_link_libraries(mapenh-extract PRIVATE c++ z)
+elseif(NOT MSVC)
     target_link_libraries(mapenh-extract PRIVATE stdc++ z)
 endif()
