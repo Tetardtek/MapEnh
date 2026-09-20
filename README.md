@@ -51,41 +51,37 @@ where, in what order. Not one byte of Blizzard art travels with it.
 
 ## Installing
 
-1. Drop `MapEnh` into `Interface/AddOns/`
+1. Download the release and unzip `MapEnh` into `Interface/AddOns/`.
 
-2. See what it needs:
-
-   ```
-   tools/extract.py --liste
-   ```
-
-   Writes `tiles.txt` (FileDataIDs) and `paths.txt` (their file names). All but
-   five live under `interface/worldmap/`.
-
-3. In [wow.export](https://github.com/Kruithne/wow.export) or CASCExplorer,
-   filter on `interface/worldmap` and export the lot. **One filter, one click** —
-   you are not picking 1566 files by hand.
-
-4. Put them where the addon looks for them:
+2. Close the game **and** Battle.net, then run the extractor that came with it:
 
    ```
-   tools/extract.py --ranger <your export folder>
+   tools/extract.py --wow "/path/to/World of Warcraft"
    ```
 
-   Exporters name files by path; the addon wants `<id>.blp`. This bridges the two,
-   and tells you plainly what is still missing and why.
+   It reads **your own** copy of the game and writes the tiles it needs. Nothing
+   is downloaded, nothing leaves your machine. Takes a couple of minutes.
 
-5. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
+3. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
 
-### Why not automatic?
+### No artwork ships with this addon
 
-`tools/extract.py` can drive a CASC extraction helper for you (`--wow` and
-`--casc-tirer`), but **no such helper ships with this addon**: the one used to
-build it is a small C program from the workshop, linked against CascLib, and
-shipping a binary you would have to trust is worse than asking you to use a tool
-you already know.
+The tiles are Blizzard's. The release carries the **code** that reads them out of
+the copy you already own — never the images themselves.
 
-The list is the contract. Where you get the files from is your call.
+The extractor is built from `tools/src/` by GitHub Actions on every release, and
+attached to it, for Linux and Windows. It links against
+[CascLib](https://github.com/ladislav-zezula/CascLib) (MIT).
+
+### If you would rather not run a binary
+
+Fair enough. There is a route with no compiled code at all:
+
+```
+tools/extract.py --liste                    # what it needs, by name
+# filter on `interface/worldmap` in wow.export, export the lot, then:
+tools/extract.py --ranger <export folder>   # puts them where the addon looks
+```
 
 ## Status
 

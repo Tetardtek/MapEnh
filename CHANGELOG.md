@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.0] — 2026-09-20
+
+**Download, run one program, play.** No third-party tool.
+
+### Added
+- `tools/src/mapenh-extract.c` — reads the local CASC storage directly
+- GitHub Actions builds it for Linux and Windows on every release and attaches it
+- `extract.py` finds it next to itself; you just point at your game folder
+
+### Why
+0.1.1 worked but asked a lot: install wow.export, filter, export 82 MB of images,
+run two commands. Too much for someone who only wants their map back in French.
+
+Still no artwork in the repository or the zip. The extractor reads the copy you
+already own — shipping a tool is not the same as redistributing assets.
+
+The manual route (`--liste` / `--ranger`) stays, for anyone who would rather not
+run a binary they did not build.
+
 ## [0.1.1] — 2026-09-20
 
 **0.1.0 was published but not usable in practice.** It handed you 1566
