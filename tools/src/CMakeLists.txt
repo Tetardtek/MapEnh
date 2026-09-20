@@ -9,7 +9,7 @@
 # s'occupe du reste, et la meme commande marche des deux cotes.
 
 cmake_minimum_required(VERSION 3.16)
-project(mapenh_extract C)
+project(mapenh_extract C CXX)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -21,6 +21,18 @@ if(NOT DEFINED CASC_INCLUDE)
 endif()
 
 add_executable(mapenh-extract mapenh-extract.c)
+
+# Sur macOS, `CascPort.h` inclut <cassert> — un en-tete C++ — dans sa branche
+# __APPLE__ (ligne 90). Linux et Windows n'atteignent jamais ce bloc, d'ou une
+# compilation C qui passe partout ailleurs et casse la seule ou on ne l'avait
+# pas essayee.
+#
+# On compile donc la source en C++ sur Apple. Verifie au prealable qu'elle s'y
+# prete : aucun cast implicite depuis void*, aucun mot reserve C++ employe comme
+# identifiant, et `g++ -fsyntax-only` passe sans une erreur.
+if(APPLE)
+    set_source_files_properties(mapenh-extract.c PROPERTIES LANGUAGE CXX)
+endif()
 
 # CascLib.h contient des `#pragma comment(lib, "CascLibRAD.lib")` : sous MSVC,
 # elle demande d'elle-meme une bibliotheque dont le nom depend de la
