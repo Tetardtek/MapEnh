@@ -2,6 +2,8 @@
 
 > World maps render blank on non-English WoW clients. MapEnh puts the tiles back.
 
+**🇫🇷 Vous jouez en français ? → [Guide d'installation en français](GUIDE-FR.md)**
+
 ## The problem
 
 On a `frFR` client (and likely every non-English locale), **every world map renders
