@@ -58,33 +58,25 @@ jobs:
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5
           cmake --build CascLib/build --config Release
 
-      # Deux etapes plutot qu'un `if` dans le script : sur Windows, `cl` n'existe
-      # pas dans le bash de Git for Windows (exit 127), il faut l'environnement
-      # MSVC et le shell cmd.
       - name: Préparer MSVC
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Construire l'extracteur (Linux)
-        if: runner.os != 'Windows'
+      - name: Construire l'extracteur
         shell: bash
         run: |
-          lib=$(find CascLib/build -name "libcasc.a" -o -name "*casc*.a" | head -1)
-          echo "CascLib : $lib"
-          cc -O2 -I CascLib/src tools/src/mapenh-extract.c "$lib" -lstdc++ -lz -o ${{ matrix.nom }}
-
-      - name: Construire l'extracteur (Windows)
-        if: runner.os == 'Windows'
-        # On CHERCHE la bibliotheque au lieu d'ecrire son nom : le premier jet
-        # visait `casc.lib`, elle s'appelle `CascLib.lib`, et le lieur rendait
-        # LNK1104 sans dire lequel des deux noms il avait essaye.
-        shell: bash
-        run: |
-          lib=$(find CascLib/build -iname "*casc*.lib" | head -1)
+          lib=$(find CascLib/build -iname "*casc*.a" -o -iname "*casc*.lib" | head -1)
           echo "CascLib : $lib"
           test -n "$lib"
-          cl //std:c11 //O2 //I CascLib/src tools/src/mapenh-extract.c \
-             "$(cygpath -w "$lib")" //link //OUT:${{ matrix.nom }}
+          cmake -S tools/src -B build-extract \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCASC_LIB="$PWD/$lib" \
+            -DCASC_INCLUDE="$PWD/CascLib/src"
+          cmake --build build-extract --config Release
+          # CMake range le binaire ailleurs selon la plateforme : on le cherche.
+          bin=$(find build-extract -name "mapenh-extract" -o -name "mapenh-extract.exe" | head -1)
+          test -n "$bin"
+          cp "$bin" ${{ matrix.nom }}
 
       - name: Vérifier qu'il démarre
         shell: bash
