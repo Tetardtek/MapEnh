@@ -44,6 +44,10 @@ jobs:
           ref: master
 
       - name: Construire CascLib
+        # `shell: bash` est indispensable : sans lui, Windows execute du
+        # PowerShell, ou `\` en fin de ligne n'est pas une continuation. La
+        # commande partait tronquee et cmake ne voyait jamais ses options.
+        shell: bash
         run: |
           # CascLib declare `cmake_minimum_required(VERSION 2.8)`, que CMake 4
           # refuse desormais. On lui dit d'appliquer les regles de 3.5 plutot que
