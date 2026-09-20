@@ -64,8 +64,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--wow", default="", help="your World of Warcraft folder")
     ap.add_argument("--produit", default=PRODUIT)
-    ap.add_argument("--casc-tirer", default="casc-tirer",
-                    help="path to a CASC extraction helper")
+    ap.add_argument("--casc-tirer", default=None,
+                    help="path to a CASC extraction helper (found automatically)")
     ap.add_argument("--liste", action="store_true",
                     help="write tiles.txt and paths.txt, then stop")
     ap.add_argument("--ranger", metavar="DOSSIER",
@@ -171,11 +171,26 @@ def main():
     lot = ICI / "batch.txt"
     lot.write_text("".join(f"#{f} {TUILES / f'{f}.blp'}\n" for f in manquants))
 
-    import shutil
+    import shutil, platform
+    if a.casc_tirer is None:
+        # L'extracteur livre avec la release, a cote de ce script. On le cherche
+        # avant de demander quoi que ce soit a l'utilisateur : le but est qu'il
+        # n'ait rien a installer.
+        noms = ["mapenh-extract-windows-x86_64.exe"] if platform.system() == "Windows" \
+               else ["mapenh-extract-linux-x86_64"]
+        for n in noms + ["casc-tirer"]:
+            c = ICI / n
+            if c.exists():
+                os.chmod(c, 0o755)
+                a.casc_tirer = str(c); break
+        else:
+            a.casc_tirer = shutil.which("casc-tirer") or "casc-tirer"
+
     if shutil.which(a.casc_tirer) is None and not os.path.exists(a.casc_tirer):
         lot.unlink(missing_ok=True)
-        sys.exit(f"No CASC helper found ({a.casc_tirer}).\n"
-                 f"Use the manual route instead:  {sys.argv[0]} --liste")
+        sys.exit("No extractor found next to this script.\n"
+                 "Either download the one attached to the release, or use the\n"
+                 f"manual route:  {sys.argv[0]} --liste")
 
     cible = f"{a.wow}:{a.produit}"
     print(f"Reading {cible} …")

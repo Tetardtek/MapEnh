@@ -17,3 +17,4 @@ lot-*.txt
 
 # Liste generee par tools/extract.py --liste
 tiles.txt
+paths.txt

@@ -1,0 +1,74 @@
+# Construit l'extracteur pour Linux et Windows, et l'attache a la release.
+#
+# Pourquoi il existe : sans lui, l'utilisateur doit installer wow.export, filtrer,
+# exporter 82 Mo d'images, puis lancer deux commandes. Avec lui, il decompresse et
+# lance UN programme qui lit sa propre copie du jeu.
+#
+# Ce qui est publie : le CODE de l'extracteur, compile. Jamais une tuile. Les
+# images restent chez celui qui possede le jeu — c'est toute la difference entre
+# fournir un outil et redistribuer des assets.
+#
+# CascLib est sous licence MIT (Ladislav Zezula), donc redistribuable, y compris
+# compile. Sa licence part avec le binaire.
+
+name: build-extractor
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            nom: mapenh-extract-linux-x86_64
+          - os: windows-latest
+            nom: mapenh-extract-windows-x86_64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Récupérer CascLib
+        uses: actions/checkout@v4
+        with:
+          repository: ladislav-zezula/CascLib
+          path: CascLib
+          ref: master
+
+      - name: Construire CascLib
+        run: |
+          cmake -S CascLib -B CascLib/build -DCMAKE_BUILD_TYPE=Release -DCASC_BUILD_STATIC_LIB=ON
+          cmake --build CascLib/build --config Release
+
+      - name: Construire l'extracteur
+        shell: bash
+        run: |
+          # On lie en statique : un utilisateur qui telecharge un binaire ne doit
+          # pas avoir a installer une bibliotheque pour qu'il demarre.
+          lib=$(find CascLib/build -name "*casc*.a" -o -name "*casc*.lib" | head -1)
+          echo "CascLib : $lib"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cl /std:c11 /O2 /I CascLib/src tools/src/mapenh-extract.c "$lib" /Fe:${{ matrix.nom }}
+          else
+            cc -O2 -I CascLib/src tools/src/mapenh-extract.c "$lib" -lstdc++ -lz -o ${{ matrix.nom }}
+          fi
+
+      - name: Vérifier qu'il démarre
+        shell: bash
+        run: ./${{ matrix.nom }} 2>&1 | head -2 || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.nom }}
+          path: ${{ matrix.nom }}
+
+      - name: Attacher à la release
+        if: github.event_name == 'release'
+        shell: bash
+        run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.nom }} --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
