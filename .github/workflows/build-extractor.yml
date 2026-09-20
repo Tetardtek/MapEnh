@@ -75,12 +75,16 @@ jobs:
 
       - name: Construire l'extracteur (Windows)
         if: runner.os == 'Windows'
-        shell: cmd
+        # On CHERCHE la bibliotheque au lieu d'ecrire son nom : le premier jet
+        # visait `casc.lib`, elle s'appelle `CascLib.lib`, et le lieur rendait
+        # LNK1104 sans dire lequel des deux noms il avait essaye.
+        shell: bash
         run: |
-          dir /s /b CascLib\build\*.lib
-          cl /std:c11 /O2 /I CascLib\src tools\src\mapenh-extract.c ^
-             CascLib\build\Release\casc.lib ^
-             /link /OUT:${{ matrix.nom }}
+          lib=$(find CascLib/build -iname "*casc*.lib" | head -1)
+          echo "CascLib : $lib"
+          test -n "$lib"
+          cl //std:c11 //O2 //I CascLib/src tools/src/mapenh-extract.c \
+             "$(cygpath -w "$lib")" //link //OUT:${{ matrix.nom }}
 
       - name: Vérifier qu'il démarre
         shell: bash
