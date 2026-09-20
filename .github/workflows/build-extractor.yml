@@ -66,12 +66,26 @@ jobs:
         shell: bash
         run: |
           lib=$(find CascLib/build -iname "*casc*.a" -o -iname "*casc*.lib" | head -1)
-          echo "CascLib : $lib"
           test -n "$lib"
+
+          # Le bash de Git for Windows rend des chemins de style MSYS
+          # (/d/a/MapEnh/...) que MSVC ne comprend pas : il les tronquait en un
+          # nom de fichier invente, different a chaque passage — 'CascLibRAS.lib',
+          # puis 'CascLibRAD.lib'. Ce n'etait pas un nom, c'etait un chemin abime.
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            lib=$(cygpath -w "$PWD/$lib")
+            inc=$(cygpath -w "$PWD/CascLib/src")
+          else
+            lib="$PWD/$lib"
+            inc="$PWD/CascLib/src"
+          fi
+          echo "CascLib : $lib"
+          echo "en-tetes : $inc"
+
           cmake -S tools/src -B build-extract \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCASC_LIB="$PWD/$lib" \
-            -DCASC_INCLUDE="$PWD/CascLib/src"
+            -DCASC_LIB="$lib" \
+            -DCASC_INCLUDE="$inc"
           cmake --build build-extract --config Release
           # CMake range le binaire ailleurs selon la plateforme : on le cherche.
           bin=$(find build-extract -name "mapenh-extract" -o -name "mapenh-extract.exe" | head -1)
