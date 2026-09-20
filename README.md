@@ -56,20 +56,50 @@ Battle.net first** — the storage is locked while they run.
 
 ### The short way — no Python needed
 
-Download the extractor for your platform (attached to the release), put it in the
-`MapEnh` folder, and from that folder run:
+Download the extractor for your platform from the release, and **put it inside the
+`MapEnh` folder**. Open a terminal **in that folder** — the paths below are
+relative to it.
 
-**Windows**
+The argument is `<your WoW folder>:wow_classic_beta`, in one piece, quoted. The
+colon separates the two; a drive letter like `C:` does not confuse it.
+
+**Windows — Command Prompt (cmd)**
 ```
 mapenh-extract-windows-x86_64.exe "C:\Program Files (x86)\World of Warcraft:wow_classic_beta" < tools\tiles-batch.txt
 ```
 
+**Windows — PowerShell** (the default in Windows Terminal)
+
+PowerShell has no `<` redirection. Pipe the file instead:
+```
+Get-Content tools\tiles-batch.txt | .\mapenh-extract-windows-x86_64.exe "C:\Program Files (x86)\World of Warcraft:wow_classic_beta"
+```
+
 **Linux**
 ```
+chmod +x mapenh-extract-linux-x86_64
 ./mapenh-extract-linux-x86_64 "/path/to/World of Warcraft:wow_classic_beta" < tools/tiles-batch.txt
 ```
 
-One command. It writes 1566 tiles into `tuiles/` and takes a couple of minutes.
+It writes 1566 files into `tuiles/` and takes a couple of minutes. The last line
+tells you how many came out:
+
+```
+-- lot : 1566 extraits, 0 echecs, 0 partiellement chiffres
+```
+
+`0 echecs` is what you want.
+
+If instead you get a line like
+
+```
+CascOpenStorageEx('C:\Wrong\Path','wow_classic_beta') : erreur 2
+```
+
+it did not open your game at all. It prints back exactly what it understood, so
+check those two values: the folder on the left (the one holding `Data/` — or
+`Data/` itself, both work), and the product on the right, which must be
+`wow_classic_beta`.
 
 ### If you have Python
 
