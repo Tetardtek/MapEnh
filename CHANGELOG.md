@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.2] — 2026-09-20
+
+**Installing no longer needs Python.** It did, and the README never said so —
+Python ships with Linux, not with Windows, which is where most players are.
+
+### Added
+- `tools/tiles-batch.txt` — the extraction list with **relative** paths, so the
+  extractor alone does the job in one command.
+
+### Changed
+- README leads with the no-Python route. The Python script stays as the second
+  way: it finds the extractor on its own and checks every file afterwards.
+
 ## [0.2.1] — 2026-09-20
 
 No change to the addon. This release exists to prove the build chain works
