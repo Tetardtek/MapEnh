@@ -52,13 +52,31 @@ where, in what order. Not one byte of Blizzard art travels with it.
 ## Installing
 
 1. Drop `MapEnh` into `Interface/AddOns/`
-2. Generate the tiles from your own installation, game and Battle.net **closed**:
+
+2. Get the list of tiles it needs:
 
    ```
-   tools/extract.py --wow "/path/to/World of Warcraft"
+   tools/extract.py --liste
    ```
 
-3. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
+   This writes `tiles.txt` — one FileDataID per line, 1566 of them for a fresh
+   install.
+
+3. Extract those files from **your own** installation with any CASC browser
+   ([wow.export](https://github.com/Kruithne/wow.export), CASCExplorer, …) and
+   put them in `tuiles/`, named `<id>.blp`.
+
+4. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
+
+### Why not automatic?
+
+`tools/extract.py` can drive a CASC extraction helper for you (`--wow` and
+`--casc-tirer`), but **no such helper ships with this addon**: the one used to
+build it is a small C program from the workshop, linked against CascLib, and
+shipping a binary you would have to trust is worse than asking you to use a tool
+you already know.
+
+The list is the contract. Where you get the files from is your call.
 
 ## Status
 

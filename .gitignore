@@ -14,3 +14,6 @@ tuiles/
 # Sorties de l'extracteur
 *.log
 lot-*.txt
+
+# Liste generee par tools/extract.py --liste
+tiles.txt

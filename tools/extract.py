@@ -10,8 +10,18 @@ into the addon folder. Nothing is downloaded, and nothing leaves your machine.
 Close the game AND Battle.net first. The CASC storage is locked while they run,
 and a half-read tile is worse than a missing one.
 
-Requires CascLib (https://github.com/ladislav-zezula/CascLib) and the two small
-helpers from the wow-forever workshop, `casc-manifest` and `casc-tirer`.
+Two ways to get the tiles:
+
+  AUTOMATIC — needs a CASC extraction helper on your PATH (see --casc-tirer).
+              Anything that reads a FileDataID out of a local CASC storage works.
+
+  MANUAL    — run with --liste. This writes `tiles.txt`, the list of FileDataIDs
+              the addon needs. Extract them with any CASC browser (wow.export,
+              CASCExplorer, …) and drop them in `tuiles/` named `<id>.blp`.
+              No helper, no compiler, nothing to trust.
+
+The manual route is the supported one: the automatic helper is a small C program
+from the workshop where this addon was written, and it is not shipped here.
 """
 import argparse, os, re, subprocess, sys
 from pathlib import Path
@@ -41,16 +51,29 @@ def identifiants_voulus():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--wow", required=True, help="your World of Warcraft folder")
+    ap.add_argument("--wow", default="", help="your World of Warcraft folder")
     ap.add_argument("--produit", default=PRODUIT)
     ap.add_argument("--casc-tirer", default="casc-tirer",
-                    help="path to the casc-tirer helper")
+                    help="path to a CASC extraction helper")
+    ap.add_argument("--liste", action="store_true",
+                    help="only write tiles.txt, the list of FileDataIDs to extract")
     a = ap.parse_args()
+
+    voulus = identifiants_voulus()
+
+    if a.liste:
+        # La voie manuelle ne touche pas au CASC : le jeu peut rester ouvert.
+        liste = ICI.parent / "tiles.txt"
+        deja = {int(f.stem) for f in TUILES.glob("*.blp") if f.stem.isdigit()}
+        manquants = [f for f in voulus if f not in deja]
+        liste.write_text("".join(f"{f}\n" for f in manquants))
+        print(f"{len(manquants)} FileDataIDs written to {liste}")
+        print("Extract them with any CASC browser, then put them in")
+        print(f"  {TUILES}/<id>.blp")
+        return 0
 
     if encore_ouvert():
         sys.exit("The game or Battle.net is still running. Close both, then retry.")
-
-    voulus = identifiants_voulus()
     deja = {int(f.stem) for f in TUILES.glob("*.blp") if f.stem.isdigit()}
     manquants = [f for f in voulus if f not in deja]
 
@@ -63,6 +86,12 @@ def main():
     TUILES.mkdir(exist_ok=True)
     lot = ICI / "batch.txt"
     lot.write_text("".join(f"#{f} {TUILES / f'{f}.blp'}\n" for f in manquants))
+
+    import shutil
+    if shutil.which(a.casc_tirer) is None and not os.path.exists(a.casc_tirer):
+        lot.unlink(missing_ok=True)
+        sys.exit(f"No CASC helper found ({a.casc_tirer}).\n"
+                 f"Use the manual route instead:  {sys.argv[0]} --liste")
 
     cible = f"{a.wow}:{a.produit}"
     print(f"Reading {cible} …")
