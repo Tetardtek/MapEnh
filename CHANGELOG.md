@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.3] — 2026-09-20
+
+Documentation only, but the 0.2.2 instructions did not work everywhere.
+
+### Fixed
+- **PowerShell** has no `<` redirection, and it is the default shell in Windows
+  Terminal. Added the pipe form, tested.
+- Said explicitly that the terminal must be opened **inside** the `MapEnh` folder:
+  `tiles-batch.txt` holds relative paths.
+- Removed a wrong hint: pointing at `Data/` works just as well as pointing at its
+  parent. Both were tested.
+- Documented the real error line, which prints back the folder and product it
+  understood — enough to diagnose a bad path on its own.
+
 ## [0.2.2] — 2026-09-20
 
 **Installing no longer needs Python.** It did, and the README never said so —
