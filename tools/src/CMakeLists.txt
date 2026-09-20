@@ -21,6 +21,16 @@ if(NOT DEFINED CASC_INCLUDE)
 endif()
 
 add_executable(mapenh-extract mapenh-extract.c)
+
+# CascLib.h contient des `#pragma comment(lib, "CascLibRAD.lib")` : sous MSVC,
+# elle demande d'elle-meme une bibliotheque dont le nom depend de la
+# configuration (Release/Debug, Ansi/Unicode, CRT statique ou DLL). CMake, lui,
+# produit `casc.lib`. Le lieur reclamait donc un fichier que personne ne
+# construit — et son nom changeait d'un passage a l'autre, ce qui m'a fait
+# chercher un chemin abime pendant deux tours.
+#
+# La macro est prevue par CascLib exactement pour ce cas.
+target_compile_definitions(mapenh-extract PRIVATE CASCLIB_NO_AUTO_LINK_LIBRARY)
 target_include_directories(mapenh-extract PRIVATE ${CASC_INCLUDE})
 target_link_libraries(mapenh-extract PRIVATE ${CASC_LIB})
 
