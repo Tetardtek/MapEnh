@@ -15,9 +15,20 @@ Two ways to get the tiles:
   AUTOMATIC — needs a CASC extraction helper on your PATH (see --casc-tirer).
               Anything that reads a FileDataID out of a local CASC storage works.
 
-  MANUAL    — run with --liste. This writes `tiles.txt`, the list of FileDataIDs
-              the addon needs. Extract them with any CASC browser (wow.export,
-              CASCExplorer, …) and drop them in `tuiles/` named `<id>.blp`.
+  MANUAL    — the supported route, and it is three steps:
+
+                1. ./extract.py --liste
+                   writes tiles.txt (the FileDataIDs) and paths.txt (their file
+                   names). All but five live under `interface/worldmap/`.
+
+                2. In wow.export or CASCExplorer, filter on `interface/worldmap`
+                   and export the lot. One filter, one click — not 1566 files
+                   picked by hand.
+
+                3. ./extract.py --ranger <the folder you exported to>
+                   renames what you exported into `tuiles/<id>.blp`, which is
+                   what the addon looks for.
+
               No helper, no compiler, nothing to trust.
 
 The manual route is the supported one: the automatic helper is a small C program
@@ -56,10 +67,66 @@ def main():
     ap.add_argument("--casc-tirer", default="casc-tirer",
                     help="path to a CASC extraction helper")
     ap.add_argument("--liste", action="store_true",
-                    help="only write tiles.txt, the list of FileDataIDs to extract")
+                    help="write tiles.txt and paths.txt, then stop")
+    ap.add_argument("--ranger", metavar="DOSSIER",
+                    help="rename files exported by a CASC browser into tuiles/<id>.blp")
     a = ap.parse_args()
 
     voulus = identifiants_voulus()
+
+    if a.ranger:
+        # wow.export et CASCExplorer nomment les fichiers par leur CHEMIN, pas par
+        # leur identifiant. L'addon, lui, cherche `<id>.blp`. C'est tout l'ecart
+        # entre « techniquement possible » et « utilisable », et il se comble ici.
+        carte = {}
+        csv = ICI / "paths.csv"
+        if csv.exists():
+            for l in csv.read_text().splitlines():
+                if l.startswith("#") or ";" not in l: continue
+                fd, chemin = l.split(";", 1)
+                if chemin: carte[chemin.strip().lower()] = int(fd)
+        # `carte` va du chemin vers l'identifiant ; on aura besoin de l'inverse
+        # pour distinguer « pas exporte » de « pas de nom connu ».
+
+        source = Path(a.ranger)
+        if not source.is_dir():
+            sys.exit(f"Not a folder: {source}")
+        TUILES.mkdir(exist_ok=True)
+
+        trouves, copies = 0, 0
+        for f in source.rglob("*.blp"):
+            # On compare sur la fin du chemin : peu importe ou l'export a ete range.
+            rel = f.as_posix().lower()
+            fd = next((i for c, i in carte.items() if rel.endswith(c)), None)
+            if fd is None:
+                continue
+            trouves += 1
+            cible = TUILES / f"{fd}.blp"
+            if not cible.exists():
+                cible.write_bytes(f.read_bytes())
+                copies += 1
+
+        voulus_n = len(identifiants_voulus())
+        presents = len([x for x in TUILES.glob("*.blp") if x.stem.isdigit()])
+        print(f"{trouves} exported files recognised · {copies} copied")
+        print(f"{presents}/{voulus_n} tiles now in place")
+        if presents < voulus_n:
+            # Deux raisons tres differentes de manquer, et les confondre envoie
+            # l'utilisateur chercher au mauvais endroit.
+            deja = {int(x.stem) for x in TUILES.glob("*.blp") if x.stem.isdigit()}
+            restants = [f for f in identifiants_voulus() if f not in deja]
+            sans_nom = [f for f in restants if f not in carte.values()]
+            pas_exportes = len(restants) - len(sans_nom)
+            print()
+            if pas_exportes:
+                print(f"{pas_exportes} tiles are still missing but DO have a known name —")
+                print("they were simply not in what you exported. Widen the filter to")
+                print("  interface/worldmap")
+                print("and run --ranger again.")
+            if sans_nom:
+                print(f"{len(sans_nom)} tiles have no known file name; they can only be")
+                print("pulled by FileDataID (see tiles.txt). The map works without them.")
+        return 0
 
     if a.liste:
         # La voie manuelle ne touche pas au CASC : le jeu peut rester ouvert.
@@ -67,9 +134,26 @@ def main():
         deja = {int(f.stem) for f in TUILES.glob("*.blp") if f.stem.isdigit()}
         manquants = [f for f in voulus if f not in deja]
         liste.write_text("".join(f"{f}\n" for f in manquants))
-        print(f"{len(manquants)} FileDataIDs written to {liste}")
-        print("Extract them with any CASC browser, then put them in")
-        print(f"  {TUILES}/<id>.blp")
+
+        # La liste des NOMS aussi : c'est elle qu'on donne au navigateur CASC.
+        carte = {}
+        csv = ICI / "paths.csv"
+        if csv.exists():
+            for l in csv.read_text().splitlines():
+                if l.startswith("#") or ";" not in l: continue
+                fd, chemin = l.split(";", 1)
+                if chemin: carte[int(fd)] = chemin.strip()
+        noms = ICI.parent / "paths.txt"
+        connus = [carte[f] for f in manquants if f in carte]
+        noms.write_text("".join(c + "\n" for c in connus))
+
+        print(f"{len(manquants)} tiles needed")
+        print(f"  {liste.name}  — their FileDataIDs")
+        print(f"  {noms.name}  — their file names ({len(connus)} known)")
+        print()
+        print("In wow.export or CASCExplorer, filter on  interface/worldmap  and")
+        print("export everything. Then:")
+        print(f"  {sys.argv[0]} --ranger <your export folder>")
         return 0
 
     if encore_ouvert():

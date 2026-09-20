@@ -53,20 +53,29 @@ where, in what order. Not one byte of Blizzard art travels with it.
 
 1. Drop `MapEnh` into `Interface/AddOns/`
 
-2. Get the list of tiles it needs:
+2. See what it needs:
 
    ```
    tools/extract.py --liste
    ```
 
-   This writes `tiles.txt` — one FileDataID per line, 1566 of them for a fresh
-   install.
+   Writes `tiles.txt` (FileDataIDs) and `paths.txt` (their file names). All but
+   five live under `interface/worldmap/`.
 
-3. Extract those files from **your own** installation with any CASC browser
-   ([wow.export](https://github.com/Kruithne/wow.export), CASCExplorer, …) and
-   put them in `tuiles/`, named `<id>.blp`.
+3. In [wow.export](https://github.com/Kruithne/wow.export) or CASCExplorer,
+   filter on `interface/worldmap` and export the lot. **One filter, one click** —
+   you are not picking 1566 files by hand.
 
-4. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
+4. Put them where the addon looks for them:
+
+   ```
+   tools/extract.py --ranger <your export folder>
+   ```
+
+   Exporters name files by path; the addon wants `<id>.blp`. This bridges the two,
+   and tells you plainly what is still missing and why.
+
+5. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
 
 ### Why not automatic?
 

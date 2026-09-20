@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.1] — 2026-09-20
+
+**0.1.0 was published but not usable in practice.** It handed you 1566
+FileDataIDs and left you to extract them one by one. This fixes that.
+
+### Added
+- `tools/paths.csv` — the file name behind each FileDataID. Names only, no artwork.
+- `--ranger <folder>` — renames what a CASC browser exported into `tuiles/<id>.blp`.
+  Exporters name by path, the addon wants ids; this bridges the two.
+- `--liste` now also writes `paths.txt`, so you can filter on `interface/worldmap`
+  and export in one go.
+
+### Fixed
+- The "still missing" message claimed those tiles had no known name. Most simply
+  had not been exported. It now tells the two apart, because they send you looking
+  in different places.
+
 ## [0.1.0] — 2026-09-19
 
 First working version. Maps render again on a French client.
