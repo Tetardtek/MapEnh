@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] — 2026-09-20
+
+No change to the addon. This release exists to prove the build chain works
+end to end: until now the extractors were attached **by hand**, because the
+"attach to release" step had never once succeeded — skipped on manual runs,
+403 on the only real release.
+
+A build that has never run unattended is not a build you can rely on.
+
 ## [0.2.0] — 2026-09-20
 
 **Download, run one program, play.** No third-party tool.
