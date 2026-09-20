@@ -51,18 +51,34 @@ where, in what order. Not one byte of Blizzard art travels with it.
 
 ## Installing
 
-1. Download the release and unzip `MapEnh` into `Interface/AddOns/`.
+Unzip `MapEnh` into `Interface/AddOns/`, then get the tiles. **Close the game and
+Battle.net first** — the storage is locked while they run.
 
-2. Close the game **and** Battle.net, then run the extractor that came with it:
+### The short way — no Python needed
 
-   ```
-   tools/extract.py --wow "/path/to/World of Warcraft"
-   ```
+Download the extractor for your platform (attached to the release), put it in the
+`MapEnh` folder, and from that folder run:
 
-   It reads **your own** copy of the game and writes the tiles it needs. Nothing
-   is downloaded, nothing leaves your machine. Takes a couple of minutes.
+**Windows**
+```
+mapenh-extract-windows-x86_64.exe "C:\Program Files (x86)\World of Warcraft:wow_classic_beta" < tools\tiles-batch.txt
+```
 
-3. Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
+**Linux**
+```
+./mapenh-extract-linux-x86_64 "/path/to/World of Warcraft:wow_classic_beta" < tools/tiles-batch.txt
+```
+
+One command. It writes 1566 tiles into `tuiles/` and takes a couple of minutes.
+
+### If you have Python
+
+`tools/extract.py --wow "<your WoW folder>"` does the same thing, finds the
+extractor on its own, and checks every file afterwards.
+
+### Then
+
+Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
 
 ### No artwork ships with this addon
 
