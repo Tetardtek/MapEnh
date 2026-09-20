@@ -58,22 +58,37 @@ jobs:
             -DCMAKE_POLICY_VERSION_MINIMUM=3.5
           cmake --build CascLib/build --config Release
 
-      - name: Construire l'extracteur
+      # Deux etapes plutot qu'un `if` dans le script : sur Windows, `cl` n'existe
+      # pas dans le bash de Git for Windows (exit 127), il faut l'environnement
+      # MSVC et le shell cmd.
+      - name: Préparer MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Construire l'extracteur (Linux)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          # On lie en statique : un utilisateur qui telecharge un binaire ne doit
-          # pas avoir a installer une bibliotheque pour qu'il demarre.
-          lib=$(find CascLib/build -name "*casc*.a" -o -name "*casc*.lib" | head -1)
+          lib=$(find CascLib/build -name "libcasc.a" -o -name "*casc*.a" | head -1)
           echo "CascLib : $lib"
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            cl /std:c11 /O2 /I CascLib/src tools/src/mapenh-extract.c "$lib" /Fe:${{ matrix.nom }}
-          else
-            cc -O2 -I CascLib/src tools/src/mapenh-extract.c "$lib" -lstdc++ -lz -o ${{ matrix.nom }}
-          fi
+          cc -O2 -I CascLib/src tools/src/mapenh-extract.c "$lib" -lstdc++ -lz -o ${{ matrix.nom }}
+
+      - name: Construire l'extracteur (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          dir /s /b CascLib\build\*.lib
+          cl /std:c11 /O2 /I CascLib\src tools\src\mapenh-extract.c ^
+             CascLib\build\Release\casc.lib ^
+             /link /OUT:${{ matrix.nom }}
 
       - name: Vérifier qu'il démarre
         shell: bash
-        run: ./${{ matrix.nom }} 2>&1 | head -2 || true
+        run: |
+          # Lance sans argument : il doit afficher son usage et sortir. Un binaire
+          # qui se construit mais ne demarre pas n'est pas un binaire livrable.
+          ./${{ matrix.nom }} 2>&1 | head -2 || true
+          test -s ${{ matrix.nom }}
 
       - uses: actions/upload-artifact@v4
         with:
