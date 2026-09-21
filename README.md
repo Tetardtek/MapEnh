@@ -152,7 +152,7 @@ which no addon covered.
 
 ## Prior art
 
-**[MapFixForever](https://www.curseforge.com/wow/addons/mapfixforever)** by
+**[MapFixForever](https://github.com/Pirson-s-Addons/MapFixForever)** by
 Pirson (MIT) fixes the same defect and got there first, on 2026-09-19. Its
 approach — replacing the texture by its FileDataID rather than laying new ones —
 is better than what MapEnh did until 0.3.0, and MapEnh now uses it.
