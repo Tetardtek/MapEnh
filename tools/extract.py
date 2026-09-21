@@ -22,7 +22,7 @@ Two ways to get the tiles:
                    names). All but five live under `interface/worldmap/`.
 
                 2. In wow.export or CASCExplorer, filter on `interface/worldmap`
-                   and export the lot. One filter, one click — not 1566 files
+                   and export the lot. One filter, one click — not 1867 files
                    picked by hand.
 
                 3. ./extract.py --ranger <the folder you exported to>
@@ -53,11 +53,23 @@ def encore_ouvert():
 
 
 def identifiants_voulus():
-    """Les FileDataID que `donnees.lua` reference."""
+    """Les FileDataID que `donnees.lua` reference.
+
+    Depuis la v0.3.0 le fichier liste des identifiants (`A[123]=1`) au lieu de
+    chemins. L'ancien format est encore accepte : un utilisateur peut avoir mis
+    a jour l'outil sans l'addon, et l'inverse se soigne moins bien qu'il ne se
+    prevoit.
+    """
     lua = ADDON / "donnees.lua"
     if not lua.exists():
         sys.exit("donnees.lua is missing — this addon is incomplete.")
-    return sorted({int(x) for x in re.findall(r"tuiles\\\\(\d+)", lua.read_text())})
+    texte = lua.read_text(encoding="utf-8")
+    ids = {int(x) for x in re.findall(r"A\[(\d+)\]", texte)}
+    if not ids:                                     # format <= 0.2.3
+        ids = {int(x) for x in re.findall(r"tuiles\\\\(\d+)", texte)}
+    if not ids:
+        sys.exit("donnees.lua holds no FileDataID — this addon is incomplete.")
+    return sorted(ids)
 
 
 def main():

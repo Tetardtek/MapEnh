@@ -2,7 +2,7 @@
 ## Title: MapEnh
 ## Notes: Repose les tuiles de carte que le client francais ne trouve pas.
 ## Author: Tetardtek
-## Version: 0.1
+## Version: 0.3.0
 ## SavedVariables: MapEnhReglages
 
 donnees.lua

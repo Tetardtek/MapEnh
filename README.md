@@ -10,57 +10,69 @@ On a `frFR` client (and likely every non-English locale), **every world map rend
 as a flat coloured background**. Quest markers, quest log and coordinates all work —
 only the terrain is missing.
 
-The cause, measured on build 1.60.1.69893/69913:
+The cause, measured on build 1.60.1.69913 by opening the CASC storage one locale
+at a time:
 
 - `C_Map.GetMapArtLayerTextures` returns the **correct** FileDataIDs, and the
   **same ones** on `frFR` and `enUS`
-- but those files are **not published for `frFR`** — they are absent from the
-  storage as a French client sees it
+- those files are **not published for `frFR`**: of the 1867 tiles involved,
+  **all 1867 open in `enUS` and `enGB`, none in `frFR`**
 - the client has **no locale fallback**: it lays out the tiles and each one
-  resolves to nothing
+  resolves to nothing, and this client paints what it cannot find as a flat
+  bright colour instead of leaving it transparent
 
-Of the 143 map-art sets referenced by `uimaparttile`, **53 have no tiles at all**
-on `frFR`, and **none are partially present** — which rules out an incomplete
-download.
+**56 zones out of 56 are affected, none partially** — which rules out an
+incomplete download. `Logs/AsyncFile.log` says it plainly: *Can't find file in
+build manifest*.
 
 ## What MapEnh does
 
-It supplies its own copies of the missing tiles and draws them on the map canvas,
-hooking `MapCanvasDetailLayerMixin:RefreshDetailTiles` with `hooksecurefunc`.
+Blizzard lays the map out as usual. MapEnh then looks at each texture that was
+just placed, and when its FileDataID is one of the missing ones, hands it a local
+copy instead.
 
 Addon files load **by path**, so they bypass the locale filter that hides the
 originals. That is the only remaining door, and it is enough.
 
-It does not write to `_G`, does not replace any Blizzard function, and does not
-touch protected code.
+Nothing is positioned by the addon, so nothing can be positioned wrong: no grid
+maths, no edge cropping, no state kept between maps.
 
-**It stands down on its own** when the client can already display its tiles —
-an English client, or a fixed build. An addon that paints over a working map does
-not fix anything, it hides it.
+It does not write to `_G` beyond `SLASH_MAPENH1` / `SlashCmdList`, does not
+replace any Blizzard function, and does not touch protected code.
 
-## ⚠️ The tiles are not in this repository
+**It stands down by itself on an English client** (`enUS` or `enGB`) — their
+tiles work, and painting over a working map hides a problem rather than fixing
+one.
 
-They are Blizzard assets. Shipping them would mean redistributing them.
+## Two ways to get the tiles
 
-**You generate your own**, from the installation you already own:
+The addon code is **the same either way** — `tuiles/<FileDataID>.blp` does not
+care how the file got there.
 
-```
-tools/extract.py            # reads your local CASC, writes tiles/ and donnees.lua
-```
+| Download | Size | What you do |
+|---|---|---|
+| `MapEnh-x.y.z-complet.zip` | ~60 MB | unzip into `Interface/AddOns`, play |
+| `MapEnh-x.y.z.zip` + extractor | 50 KB | extract the tiles from your own copy |
 
-The repository carries the **code** and the **tile map** — which FileDataID goes
-where, in what order. Not one byte of Blizzard art travels with it.
+### Not in this repository
 
-## Installing
+No artwork is committed here, and none ever will be. The `-complet` zip is built
+locally from a real installation and attached to the release; the repository
+carries the **code** and the **list of FileDataIDs** to fetch.
 
-Unzip `MapEnh` into `Interface/AddOns/`, then get the tiles. **Close the game and
-Battle.net first** — the storage is locked while they run.
+## Installing — the short way
 
-### The short way — no Python needed
+Unzip `MapEnh-x.y.z-complet.zip` into `Interface/AddOns/`. Launch the game, tick
+MapEnh in the addon list, open your map. Nothing else.
 
-Download the extractor for your platform from the release, and **put it inside the
-`MapEnh` folder**. Open a terminal **in that folder** — the paths below are
-relative to it.
+## Installing — extracting the tiles yourself
+
+Take `MapEnh-x.y.z.zip` (not the `-complet` one) and the extractor for your
+platform. **Close the game and Battle.net first** — the storage is locked while
+they run.
+
+Put the extractor **inside the `MapEnh` folder** and open a terminal **in that
+folder** — the paths below are relative to it.
 
 The argument is `<your WoW folder>:wow_classic_beta`, in one piece, quoted. The
 colon separates the two; a drive letter like `C:` does not confuse it.
@@ -83,11 +95,11 @@ chmod +x mapenh-extract-linux-x86_64
 ./mapenh-extract-linux-x86_64 "/path/to/World of Warcraft:wow_classic_beta" < tools/tiles-batch.txt
 ```
 
-It writes 1566 files into `tuiles/` and takes a couple of minutes. The last line
+It writes 1867 files into `tuiles/` and takes a couple of minutes. The last line
 tells you how many came out:
 
 ```
--- lot : 1566 extraits, 0 echecs, 0 partiellement chiffres
+-- lot : 1867 extraits, 0 echecs, 0 partiellement chiffres
 ```
 
 `0 echecs` is what you want.
@@ -112,10 +124,7 @@ extractor on its own, and checks every file afterwards.
 
 Launch the game. `/mapenh` turns on diagnostics if something looks wrong.
 
-### No artwork ships with this addon
-
-The tiles are Blizzard's. The release carries the **code** that reads them out of
-the copy you already own — never the images themselves.
+### The extractor
 
 The extractor is built from `tools/src/` by GitHub Actions on every release, and
 attached to it, for Linux and Windows. It links against
@@ -133,9 +142,21 @@ tools/extract.py --ranger <export folder>   # puts them where the addon looks
 
 ## Status
 
-Working. **54 maps, 1566 tiles.** Terrain and exploration overlays both restored,
-verified in game across several zones.
+Working. **1867 tiles across 56 zones**, terrain and exploration overlays alike,
+verified in game.
 
-Six maps in this build need nothing — Alterac Valley among them, and Mount Hyjal
-is only missing 30 tiles out of 42. So this is not a whole locale bundle that went
-missing; something finer is going on.
+Every id on the list was checked in the storage itself — absent in `frFR`,
+present in `enUS` — rather than inferred from a file listing. 12 tiles that load
+fine in French were dropped in 0.3.0; 313 that were missing were added, 276 of
+which no addon covered.
+
+## Prior art
+
+**[MapFixForever](https://www.curseforge.com/wow/addons/mapfixforever)** by
+Pirson (MIT) fixes the same defect and got there first, on 2026-09-19. Its
+approach — replacing the texture by its FileDataID rather than laying new ones —
+is better than what MapEnh did until 0.3.0, and MapEnh now uses it.
+
+The two differ in what they ship: MapFixForever bundles the 1554 images, MapEnh
+extracts them from your own installation. Coverage measured against the storage
+on 2026-09-21: 1867 tiles here, 1462 there.

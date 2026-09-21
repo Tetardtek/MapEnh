@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.3.0] — 2026-09-21
+
+**1867 tiles instead of 1566, and a simpler way of putting them back.**
+
+### Changed
+- **Tiles are now replaced, not re-laid.** Blizzard lays out the map; MapEnh only
+  swaps the texture it just placed, recognised by its FileDataID. No grid maths,
+  no cropping of edge tiles, no deferred hiding of the exploration pin, no state
+  kept between maps — and the artefacts those steps produced are gone with them.
+  The idea comes from **MapFixForever** (Pirson, MIT). It is better than ours.
+- `donnees.lua` went from 3058 lines to 382: a set of ids, no path table. The
+  file on disk is named after its FileDataID, so the path is computed.
+
+### Added
+- **`MapEnh-0.3.0-complet.zip` — the tiles are in the download.** Unzip, play.
+  The addon code is unchanged between the two zips: `tuiles/<FileDataID>.blp`
+  does not care how the file got there. The extraction route stays, for anyone
+  who would rather nothing were redistributed to them.
+  No artwork is committed to this repository, and none ever will be — the full
+  zip is built locally and attached to the release.
+- **+276 tiles in `riverlands` and `hyjal`** that no addon covered — found by
+  testing all 76 611 `interface/worldmap/` candidates against the storage.
+- **+37 tiles** that MapFixForever covers and we did not.
+- **`enGB` now stands down too.** 0.2.x only knew `enUS`, so it would have gone
+  to work for nothing on a British client. Measured: `enGB` has all 1867.
+- `/mapenh on|off` to toggle the fix, `/mapenh bavard` for diagnostics,
+  `/mapenh` alone for status.
+
+### Removed
+- **12 `hyjal` tiles that load fine in French.** They were shipped for nothing.
+
+### How the list is built now
+Every id is verified in the CASC storage itself — **absent in `frFR`, present in
+`enUS`** — by `outils/casc-locale`, which opens files locale by locale instead of
+enumerating them.
+
+That distinction mattered: the manifest tool we had trusted until then,
+`CascFindFirstFile`, **does not enumerate the whole root**. 1554 of our own 1566
+tiles were missing from it, in all four manifests, while extracting without error.
+A comparison between a French and an English manifest — the measurement planned
+for this release — would have been blind at the same spot in both, and the silence
+would have looked like an answer.
+
 ## [0.2.3] — 2026-09-20
 
 Documentation only, but the 0.2.2 instructions did not work everywhere.
