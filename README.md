@@ -160,3 +160,11 @@ is better than what MapEnh did until 0.3.0, and MapEnh now uses it.
 The two differ in what they ship: MapFixForever bundles the 1554 images, MapEnh
 extracts them from your own installation. Coverage measured against the storage
 on 2026-09-21: 1867 tiles here, 1462 there.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
+
+The map tiles are **not** covered by it: they are Blizzard assets, they are not
+in this repository, and the `-complet` archive only ships copies pulled from an
+installation you already own.

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.1] — 2026-09-22
+
+Nothing changes in how the addon behaves.
+
+### Added
+- **`LICENSE` — MIT.** The project had none: by default that meant "all rights
+  reserved", which is not what an addon meant to be shared should say, and
+  CurseForge requires one. The tiles are explicitly carved out: they are Blizzard
+  artwork and the licence does not cover them.
+- `## X-Curse-Project-ID` and `## X-License` in the `.toc`.
+
+### Published
+- Now on CurseForge as well as GitHub.
+
 ## [0.3.0] — 2026-09-21
 
 **1867 tiles instead of 1566, and a simpler way of putting them back.**
